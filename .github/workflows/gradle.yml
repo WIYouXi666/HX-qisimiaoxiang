@@ -1,4 +1,4 @@
-name: Java 流程
+name: 编译流程
 
 on: [push, pull_request]
 
