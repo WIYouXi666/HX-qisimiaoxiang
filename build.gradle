@@ -1,46 +1,55 @@
 version '1.0'
 
-buildscript{
-    repositories{
-		mavenCentral()
-    }
-    
-    ext{
-        //the build number that this mod is made for
-        mindustryVersion = 'v150.1'
-        kotlinVersion = "2.2.0"
-        sdkRoot = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
-    }
-    
-    dependencies{
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '2.2.0' // 使用 plugins DSL 更现代的方式
+// 全局 Java 工具链设为 21（不影响 compileKotlin 的单独设置）
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
-apply plugin: "kotlin"
+// 显式设置 Kotlin 编译目标为 1.8（覆盖默认值）
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+// 确保 Java 编译也使用 1.8（避免不一致）
+compileJava {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    
+    ext {
+        //the build number that this mod is made for
+        mindustryVersion = 'v150.1'
+        sdkRoot = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
+    }
+}
 
 sourceSets.main.kotlin.srcDirs = ["src"]
 
-repositories{
+repositories {
     mavenCentral()
-    maven{ url "https://raw.githubusercontent.com/Zelaux/MindustryRepo/master/repository" }
-    maven{ url 'https://www.jitpack.io' }
+    maven { url "https://raw.githubusercontent.com/Zelaux/MindustryRepo/master/repository" }
+    maven { url 'https://www.jitpack.io' }
 }
 
-dependencies{
+dependencies {
     compileOnly "com.github.Anuken.Arc:arc-core:$mindustryVersion"
     compileOnly "com.github.Anuken.Mindustry:core:$mindustryVersion"
 }
 
-compileKotlin{
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
-}
+// 移除旧的 compileKotlin 配置，改用上面的 jvmToolchain
 
-task jarAndroid{
+task jarAndroid {
     dependsOn "jar"
 
-    doLast{
+    doLast {
         if(!sdkRoot || !new File(sdkRoot).exists()) throw new GradleException("No valid Android SDK found. Ensure that ANDROID_HOME is set to your Android SDK directory.");
 
         def platformRoot = new File("$sdkRoot/platforms/").listFiles().sort().reverse().find{ f -> new File(f, "android.jar").exists()}
@@ -56,33 +65,33 @@ task jarAndroid{
     }
 }
 
-jar{
-	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveFileName = "${project.archivesBaseName}Desktop.jar"
 
-    from{
+    from {
         configurations.runtimeClasspath.collect{ it.isDirectory() ? it : zipTree(it) }
     }
 
-    from(rootDir){
+    from(rootDir) {
         include "mod.hjson"
     }
 
-    from("assets/"){
+    from("assets/") {
         include "**"
     }
 }
 
-task deploy(type: Jar){
+task deploy(type: Jar) {
     dependsOn jarAndroid
     dependsOn jar
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveFileName = "${project.archivesBaseName}.jar"
 
-    from{ [zipTree("$buildDir/libs/${project.archivesBaseName}Desktop.jar"), zipTree("$buildDir/libs/${project.archivesBaseName}Android.jar")] }
+    from { [zipTree("$buildDir/libs/${project.archivesBaseName}Desktop.jar"), zipTree("$buildDir/libs/${project.archivesBaseName}Android.jar")] }
 
-    doLast{
-        delete{
+    doLast {
+        delete {
             delete "$buildDir/libs/${project.archivesBaseName}Desktop.jar"
             delete "$buildDir/libs/${project.archivesBaseName}Android.jar"
         }
