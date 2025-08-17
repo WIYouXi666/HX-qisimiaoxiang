@@ -2,6 +2,7 @@ version '1.0'
 
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '2.2.0' // 使用 plugins DSL 更现代的方式
+}
 // 全局 Java 工具链设为 21（不影响 compileKotlin 的单独设置）
 java {
     toolchain {
