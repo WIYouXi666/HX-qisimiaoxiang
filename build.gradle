@@ -1,17 +1,19 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 version '1.0'
 
 buildscript {
     repositories {
         mavenCentral()
     }
-    
+
     ext {
         // the build number that this mod is made for
         mindustryVersion = 'v150.1'
         kotlinVersion = "2.1.0"
         sdkRoot = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
     }
-    
+
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
     }
@@ -33,7 +35,7 @@ dependencies {
 }
 
 // 修复核心问题：统一 Java 和 Kotlin 的 JVM 目标版本
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+tasks.withType(KotlinCompile).configureEach {
     kotlinOptions {
         jvmTarget = "1.8" // 明确指定 Kotlin 编译为 Java 8 字节码
     }
@@ -44,7 +46,7 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-task jarAndroid {
+tasks.register('jarAndroid') {
     dependsOn "jar"
 
     doLast {
@@ -52,7 +54,7 @@ task jarAndroid {
             throw new GradleException("No valid Android SDK found. Ensure that ANDROID_HOME is set to your Android SDK directory.")
         }
 
-        def platformRoot = new File("$sdkRoot/platforms/").listFiles().sort().reverse().find { f -> 
+        def platformRoot = new File("$sdkRoot/platforms/").listFiles().sort().reverse().find { f ->
             new File(f, "android.jar").exists()
         }
 
@@ -61,14 +63,14 @@ task jarAndroid {
         }
 
         // collect dependencies needed for desugaring
-        def dependencies = (configurations.compileClasspath.asList() + 
-                          configurations.runtimeClasspath.asList() + 
-                          [new File(platformRoot, "android.jar")])
-                          .collect { "--classpath $it.path" }.join(" ")
+        def dependencies = (configurations.compileClasspath.asList() +
+                configurations.runtimeClasspath.asList() +
+                [new File(platformRoot, "android.jar")])
+                .collect { "--classpath $it.path" }.join(" ")
 
         // dex and desugar files - this requires d8 in your PATH
         "d8 $dependencies --min-api 14 --output ${project.archivesBaseName}Android.jar ${project.archivesBaseName}Desktop.jar"
-            .execute(null, new File("$buildDir/libs")).waitForProcessOutput(System.out, System.err)
+                .execute(null, new File("$layout.buildDirectory/libs")).waitForProcessOutput(System.out, System.err)
     }
 }
 
@@ -85,21 +87,22 @@ jar {
     }
 }
 
-task deploy(type: Jar) {
+tasks.register('deploy', Jar) {
     dependsOn jarAndroid
     dependsOn jar
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveFileName = "${project.archivesBaseName}.jar"
 
-    from { 
-        [zipTree("$buildDir/libs/${project.archivesBaseName}Desktop.jar"), 
-         zipTree("$buildDir/libs/${project.archivesBaseName}Android.jar")] 
+    from {
+        [zipTree("$layout.buildDirectory/libs/${project.archivesBaseName}Desktop.jar"),
+         zipTree("$layout.buildDirectory/libs/${project.archivesBaseName}Android.jar")]
     }
 
     doLast {
         delete {
-            delete "$buildDir/libs/${project.archivesBaseName}Desktop.jar"
-            delete "$buildDir/libs/${project.archivesBaseName}Android.jar"
+            delete "$layout.buildDirectory/libs/${project.archivesBaseName}Desktop.jar"
+            delete "$layout.buildDirectory/libs/${project.archivesBaseName}Android.jar"
         }
     }
 }
+
