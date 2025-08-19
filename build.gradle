@@ -8,7 +8,7 @@ buildscript {
     ext {
         // the build number that this mod is made for
         mindustryVersion = 'v150.1'
-        kotlinVersion = "2.2.0"
+        kotlinVersion = "2.1.0"
         sdkRoot = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
     }
     
