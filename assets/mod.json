@@ -1,0 +1,14 @@
+
+{
+  
+  "displayName": "幻想",
+  "name":"hx-hy-cq",
+  "author":"自由/WIYouXi666",
+  "description":"暂无",
+  "version":"0.1",
+  "minGameVersion":"150",
+
+  "main": "example.ExampleKotlinMod",
+  "java": true
+}
+
