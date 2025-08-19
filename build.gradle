@@ -1,13 +1,25 @@
-plugins {
-    id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '2.2.0'
-}
-
 version '1.0'
 
-// 使用新版Gradle的扩展配置方式
-def mindustryVersion = 'v150.1'
-def sdkRoot = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    
+    ext {
+        // the build number that this mod is made for
+        mindustryVersion = 'v150.1'
+        kotlinVersion = "2.2.0"
+        sdkRoot = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
+    }
+    
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+    }
+}
+
+apply plugin: "kotlin"
+
+sourceSets.main.kotlin.srcDirs = ["src"]
 
 repositories {
     mavenCentral()
@@ -16,27 +28,25 @@ repositories {
 }
 
 dependencies {
-    implementation "com.github.Anuken.Arc:arc-core:$mindustryVersion"
-    implementation "com.github.Anuken.Mindustry:core:$mindustryVersion"
+    compileOnly "com.github.Anuken.Arc:arc-core:$mindustryVersion"
+    compileOnly "com.github.Anuken.Mindustry:core:$mindustryVersion"
 }
 
-// 配置Java和Kotlin的兼容性
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(8)
-    }
-}
-
+// 修复核心问题：统一 Java 和 Kotlin 的 JVM 目标版本
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "1.8" // 明确指定 Kotlin 编译为 Java 8 字节码
     }
 }
 
-// 更新后的jar任务配置
-tasks.register('jarAndroid', Jar) {
-    dependsOn jar
-    
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+task jarAndroid {
+    dependsOn "jar"
+
     doLast {
         if (!sdkRoot || !new File(sdkRoot).exists()) {
             throw new GradleException("No valid Android SDK found. Ensure that ANDROID_HOME is set to your Android SDK directory.")
@@ -79,7 +89,7 @@ jar {
     }
 }
 
-tasks.register('deploy', Jar) {
+task deploy(type: Jar) {
     dependsOn jarAndroid
     dependsOn jar
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
