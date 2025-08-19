@@ -1,27 +1,17 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-version '1.0'
-
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-
-    ext {
-        // the build number that this mod is made for
-        mindustryVersion = 'v150.1'
-        kotlinVersion = "2.1.0"
-        sdkRoot = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
-    }
-
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-    }
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm' version '2.1.0' // 直接指定 Kotlin 插件版本
 }
 
-apply plugin: "kotlin"
+version '1.0'
 
-sourceSets.main.kotlin.srcDirs = ["src"]
+// 统一版本号管理
+ext {
+    mindustryVersion = 'v150.1'
+    sdkRoot = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
+}
 
 repositories {
     mavenCentral()
@@ -30,8 +20,8 @@ repositories {
 }
 
 dependencies {
-    compileOnly "com.github.Anuken.Arc:arc-core:$mindustryVersion"
-    compileOnly "com.github.Anuken.Mindustry:core:$mindustryVersion"
+    compileOnly ("com.github.Anuken.Arc:arc-core:$mindustryVersion")
+    compileOnly ("com.github.Anuken.Mindustry:core:$mindustryVersion")
 }
 
 // 修复核心问题：统一 Java 和 Kotlin 的 JVM 目标版本
@@ -70,7 +60,7 @@ tasks.register('jarAndroid') {
 
         // dex and desugar files - this requires d8 in your PATH
         "d8 $dependencies --min-api 14 --output ${project.archivesBaseName}Android.jar ${project.archivesBaseName}Desktop.jar"
-                .execute(null, new File("$layout.buildDirectory/libs")).waitForProcessOutput(System.out, System.err)
+                .execute(null, new File("$buildDir/libs")).waitForProcessOutput(System.out, System.err)
     }
 }
 
@@ -94,15 +84,16 @@ tasks.register('deploy', Jar) {
     archiveFileName = "${project.archivesBaseName}.jar"
 
     from {
-        [zipTree("$layout.buildDirectory/libs/${project.archivesBaseName}Desktop.jar"),
-         zipTree("$layout.buildDirectory/libs/${project.archivesBaseName}Android.jar")]
+        [zipTree("$buildDir/libs/${project.archivesBaseName}Desktop.jar"),
+         zipTree("$buildDir/libs/${project.archivesBaseName}Android.jar")]
     }
 
     doLast {
         delete {
-            delete "$layout.buildDirectory/libs/${project.archivesBaseName}Desktop.jar"
-            delete "$layout.buildDirectory/libs/${project.archivesBaseName}Android.jar"
+            delete "$buildDir/libs/${project.archivesBaseName}Desktop.jar"
+            delete "$buildDir/libs/${project.archivesBaseName}Android.jar"
         }
     }
 }
+
 
