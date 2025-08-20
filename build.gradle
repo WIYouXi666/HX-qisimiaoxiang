@@ -1,33 +1,41 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-plugins {
-    id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '2.1.0' // 直接指定 Kotlin 插件版本
-}
-
 version '1.0'
 
-// 统一版本号管理
-ext {
-    mindustryVersion = 'v150.1'
-    sdkRoot = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    ext {
+        //the build number that this mod is made for
+        mindustryVersion = 'v150.1'
+        kotlinVersion = "2.1.0"
+        sdkRoot = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+    }
 }
+
+apply plugin: "kotlin"
+
+sourceSets.main.kotlin.srcDirs = ["src"]
 
 repositories {
     mavenCentral()
     maven { url "https://raw.githubusercontent.com/Zelaux/MindustryRepo/master/repository" }
     maven { url 'https://www.jitpack.io' }
 }
-
 dependencies {
-    compileOnly ("com.github.Anuken.Arc:arc-core:$mindustryVersion")
-    compileOnly ("com.github.Anuken.Mindustry:core:$mindustryVersion")
+    compileOnly("com.github.Anuken.Arc:arc-core:$mindustryVersion")
+    compileOnly("com.github.Anuken.Mindustry:core:$mindustryVersion")
 }
 
-// 修复核心问题：统一 Java 和 Kotlin 的 JVM 目标版本
 tasks.withType(KotlinCompile).configureEach {
     kotlinOptions {
-        jvmTarget = "1.8" // 明确指定 Kotlin 编译为 Java 8 字节码
+        jvmTarget = "1.8"// 明确指定 Kotlin 编译为 Java 8 字节码
     }
 }
 
@@ -95,5 +103,4 @@ tasks.register('deploy', Jar) {
         }
     }
 }
-
 
