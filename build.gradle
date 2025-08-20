@@ -33,15 +33,14 @@ dependencies {
     compileOnly("com.github.Anuken.Mindustry:core:$mindustryVersion")
 }
 
-tasks.withType(KotlinCompile).configureEach {
-    kotlinOptions {
-        jvmTarget = "1.8"// 明确指定 Kotlin 编译为 Java 8 字节码
-    }
-}
-
+//tasks.withType(KotlinCompile).configureEach {
+//    kotlinOptions {
+//        jvmTarget = "17"
+//    }
+//}
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_17
 }
 
 tasks.register('jarAndroid') {
